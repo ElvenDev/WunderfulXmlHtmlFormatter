@@ -1,0 +1,9 @@
+{
+    "name": "virt49577/proovikas",
+    "require": {},
+    "autoload": {
+        "classmap": [
+            "Functions/"
+        ]
+    }
+}

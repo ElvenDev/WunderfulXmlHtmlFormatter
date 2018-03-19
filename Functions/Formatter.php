@@ -17,24 +17,90 @@ namespace Functions;
  */
 class Formatter
 {
-    protected $string;
+    protected $string = "";
     protected $tabCounter = 0;
 
     /**
-     * Formatter constructor.
-     * @param $files
+     * Set string content from variable.
+     * @param $string
+     * @return $this
      */
-    public function __construct($files)
-    {
+    public function setString($string) {
+        $this->string = $string;
+
+        return $this;
+    }
+
+    /**
+     * Set string content depending from uploaded file.
+     * @param $files
+     * @return $this
+     */
+    public function setFiles($files) {
         $this->string = file_get_contents($files['fileToUpload']['tmp_name']);
+
+        return $this;
+    }
+
+    /**
+     * Formats $this->string variable.
+     * @return $this
+     */
+    public function format() {
+        if($this->string == "") {
+            return $this;
+        }
+
+        $newString = "";
+
+        $this->stripWhitespaces();
+
+        $explodedSmallerThan = explode("<", $this->string);
+
+        foreach ($explodedSmallerThan as $exploded) {
+            if ($exploded == "") continue;
+
+            $newString .= $this->createStringRowFromArray($exploded);
+        }
+
+        $this->string = $newString;
+
+        return $this;
+    }
+
+    /**
+     * Depending from $exploded variable, returns one or two rows of string.
+     * @param $exploded
+     * @return string
+     */
+    protected function createStringRowFromArray($exploded) {
+        $string = "";
+        list($tag, $afterTagContent) = explode(">", $exploded);
+
+        if (substr($tag, -1) == "/") {
+            $string .= $this->getTabs(0);
+        } else if(substr($tag, 0, 1) == "/") {
+            $string .= $this->getTabs(-1);
+        } else {
+            $string .= $this->getTabs(1);
+        }
+        $string .= "<" . $tag . ">\n";
+
+        if (isset($afterTagContent) && $afterTagContent != "" && $afterTagContent != " ") {
+            $string .= $this->getTabs() . $afterTagContent . "\n";
+        }
+
+        return $string;
     }
 
     /**
      * Replace all unnecessary whitespace characters, replacing it with a single space. (Makes into 1 line)
      */
-    public function stripWhitespaces()
+    protected function stripWhitespaces()
     {
         $this->string = preg_replace('/\s+/', ' ', $this->string);
+
+        return $this;
     }
 
     /**
@@ -46,10 +112,8 @@ class Formatter
         if($change < 0) {
             $this->tabCounter = $this->tabCounter + $change;
         }
-        $string = "";
-        for ($i = 0; $i < $this->tabCounter; $i++) {
-            $string .= "\t";
-        }
+
+        $string = $this->generateTabs();
 
         if($change > 0) {
             $this->tabCounter = $this->tabCounter + $change;
@@ -59,35 +123,16 @@ class Formatter
     }
 
     /**
-     * Formats $this->string variable.
+     * get Tabs alone, depending from tabCounter.
+     * @return string
      */
-    public function format() {
-        $newString = "";
-
-        $this->stripWhitespaces();
-
-        $explodedSmallerThan = explode("<", $this->string);
-
-        foreach ($explodedSmallerThan as $exploded) {
-            if ($exploded == "") continue;
-
-            $explodedFinal = explode(">", $exploded);
-
-            if (substr($explodedFinal[0], -1) == "/") {
-                $newString .= $this->getTabs(0);
-            } else if(substr($explodedFinal[0], 0, 1) == "/") {
-                $newString .= $this->getTabs(-1);
-            } else {
-                $newString .= $this->getTabs(1);
-            }
-            $newString .= "<" . $explodedFinal[0] . ">\n";
-
-            if (isset($explodedFinal[1]) && $explodedFinal[1] != "" && $explodedFinal[1] != " ") {
-                $newString .= $this->getTabs(0) . $explodedFinal[1] . "\n";
-            }
+    protected function generateTabs() {
+        $string = "";
+        for ($i = 0; $i < $this->tabCounter; $i++) {
+            $string .= "\t";
         }
 
-        $this->string = $newString;
+        return $string;
     }
 
     /**

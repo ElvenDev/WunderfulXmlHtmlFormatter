@@ -15,8 +15,8 @@ use Functions\Formatter;
 <?
 
 if($_FILES) {
-    $formatter = new Formatter($_FILES);
-    $formatter->format();
+    $formatter = new Formatter();
+    $formatter->setFiles($_FILES)->format();
 
     echo "<textarea rows='30' style='border: none; width: 100%'>" . $formatter . "</textarea>";
 }
